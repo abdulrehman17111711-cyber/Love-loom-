@@ -1,0 +1,6 @@
+{
+  "name": "LoveLoom 3D",
+  "description": "LoveLoom 3D: A magical romantic birthday celebration app with cute 3D animated bear companions, interactive cake, proposal scenes, mini games, virtual gifts, and love letters.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
