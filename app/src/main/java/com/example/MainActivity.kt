@@ -1,22 +1,55 @@
 package com.example
 
 import android.os.Bundle
+import android.view.ViewGroup
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.compose.animation.Crossfade
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.GraphicEq
+import androidx.compose.material.icons.filled.MusicNote
+import androidx.compose.material.icons.filled.Pause
+import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.SkipNext
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.viewinterop.AndroidView
 import com.example.ui.components.LoveLoomTopBar
 import com.example.ui.navigation.AppScreen
 import com.example.ui.screens.celebration.BirthdayCelebrationScreen
@@ -111,6 +144,87 @@ class MainActivity : ComponentActivity() {
                   { viewModel.navigateBack() }
                 } else null
               )
+            }
+          },
+          bottomBar = {
+            if (showTopBar) {
+              Card(
+                modifier = Modifier
+                  .fillMaxWidth()
+                  .padding(horizontal = 14.dp, vertical = 6.dp)
+                  .shadow(8.dp, RoundedCornerShape(18.dp))
+                  .clickable { viewModel.navigateTo(AppScreen.MUSIC_PLAYER) }
+                  .testTag("persistent_mini_player"),
+                shape = RoundedCornerShape(18.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                border = BorderStroke(1.2.dp, Color(0xFFFFCCD5))
+              ) {
+                Row(
+                  modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 12.dp, vertical = 8.dp),
+                  verticalAlignment = Alignment.CenterVertically,
+                  horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                  Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.weight(1f)
+                  ) {
+                    Box(
+                      modifier = Modifier
+                        .size(36.dp)
+                        .clip(CircleShape)
+                        .background(if (isMusicPlaying) Color(0xFFFF2E7E) else Color(0xFFFFE4EC)),
+                      contentAlignment = Alignment.Center
+                    ) {
+                      Icon(
+                        imageVector = if (isMusicPlaying) Icons.Default.GraphicEq else Icons.Default.MusicNote,
+                        contentDescription = null,
+                        tint = if (isMusicPlaying) Color.White else Color(0xFFBE185D),
+                        modifier = Modifier.size(18.dp)
+                      )
+                    }
+                    Spacer(modifier = Modifier.width(10.dp))
+                    Column {
+                      Text(
+                        text = currentTrackTitle,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 13.sp,
+                        maxLines = 1,
+                        color = MaterialTheme.colorScheme.onSurface
+                      )
+                      Text(
+                        text = "Atif Aslam • Tap for full player 🎵",
+                        fontSize = 10.5.sp,
+                        color = Color(0xFFBE185D)
+                      )
+                    }
+                  }
+
+                  Row(verticalAlignment = Alignment.CenterVertically) {
+                    IconButton(
+                      onClick = { viewModel.audioEngine.togglePlayPause() },
+                      modifier = Modifier.size(38.dp).testTag("mini_player_play_pause")
+                    ) {
+                      Icon(
+                        imageVector = if (isMusicPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
+                        contentDescription = if (isMusicPlaying) "Pause" else "Play",
+                        tint = Color(0xFFFF2E7E)
+                      )
+                    }
+                    IconButton(
+                      onClick = { viewModel.audioEngine.nextTrack() },
+                      modifier = Modifier.size(38.dp).testTag("mini_player_next")
+                    ) {
+                      Icon(
+                        imageVector = Icons.Default.SkipNext,
+                        contentDescription = "Next Track",
+                        tint = Color(0xFFBE185D)
+                      )
+                    }
+                  }
+                }
+              }
             }
           }
         ) { innerPadding ->

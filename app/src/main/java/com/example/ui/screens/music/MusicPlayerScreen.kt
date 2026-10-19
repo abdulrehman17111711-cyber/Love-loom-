@@ -1,12 +1,6 @@
 package com.example.ui.screens.music
 
-import android.content.Intent
-import android.net.Uri
-import android.view.View
 import android.view.ViewGroup
-import android.webkit.WebChromeClient
-import android.webkit.WebView
-import android.webkit.WebViewClient
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
@@ -35,14 +29,16 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.GraphicEq
 import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material.icons.filled.MusicOff
-import androidx.compose.material.icons.filled.OpenInNew
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.PowerSettingsNew
+import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Repeat
+import androidx.compose.material.icons.filled.RepeatOne
+import androidx.compose.material.icons.filled.Shuffle
 import androidx.compose.material.icons.filled.SkipNext
 import androidx.compose.material.icons.filled.SkipPrevious
 import androidx.compose.material.icons.filled.Videocam
@@ -52,12 +48,14 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -85,6 +83,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import com.example.audio.AudioTrackInfo
 import com.example.audio.LoveAudioEngine
+import com.example.audio.PlaybackRepeatMode
 import com.example.ui.components.FloatingParticles
 
 enum class MusicDisplayMode {
@@ -107,6 +106,12 @@ fun MusicPlayerScreen(
   val safeTrackIndex = currentTrackIndex.coerceIn(0, audioEngine.tracks.size - 1)
   val currentTrack = audioEngine.tracks[safeTrackIndex]
   val progressSec by audioEngine.trackProgressSeconds.collectAsState()
+  val durationSec by audioEngine.trackDurationSeconds.collectAsState()
+  val isBuffering by audioEngine.isBuffering.collectAsState()
+  val errorMessage by audioEngine.errorMessage.collectAsState()
+  val isShuffle by audioEngine.isShuffle.collectAsState()
+  val repeatMode by audioEngine.repeatMode.collectAsState()
+  val isMusicEnabled by audioEngine.isMusicEnabled.collectAsState()
 
   var displayMode by remember { mutableStateOf(MusicDisplayMode.YOUTUBE_PLAYER) }
 
@@ -153,6 +158,8 @@ fun MusicPlayerScreen(
     return String.format("%02d:%02d", m, s)
   }
 
+  val totalDuration = maxOf(durationSec, currentTrack.durationSeconds)
+
   Box(
     modifier = Modifier
       .fillMaxSize()
@@ -176,7 +183,7 @@ fun MusicPlayerScreen(
         .padding(horizontal = 18.dp, vertical = 14.dp),
       horizontalAlignment = Alignment.CenterHorizontally
     ) {
-      // Top Navigation Bar
+      // Top Navigation & Control Bar
       Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -189,6 +196,7 @@ fun MusicPlayerScreen(
             .shadow(6.dp, CircleShape)
             .clip(CircleShape)
             .background(Color.White)
+            .testTag("music_back_button")
         ) {
           Icon(
             imageVector = Icons.Default.ArrowBack,
@@ -200,47 +208,110 @@ fun MusicPlayerScreen(
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
           Row(verticalAlignment = Alignment.CenterVertically) {
             Text(
-              text = "Atif Aslam Original Hits 🎵",
+              text = "Atif Aslam Hits 🎵",
               fontWeight = FontWeight.ExtraBold,
-              fontSize = 16.5.sp,
+              fontSize = 17.sp,
               color = Color(0xFF831843)
             )
             Spacer(modifier = Modifier.width(4.dp))
             Text(text = "🇵🇰", fontSize = 16.sp)
           }
           Text(
-            text = "Official YouTube Audio & Video Tracks",
+            text = if (isMusicEnabled) {
+              if (isPlaying) "Playing In-App • Original Audio" else "Paused • Ready"
+            } else {
+              "Music Power is OFF"
+            },
             fontSize = 11.5.sp,
-            color = Color(0xFFBE185D),
+            color = if (isMusicEnabled) Color(0xFFBE185D) else Color.Gray,
             fontWeight = FontWeight.SemiBold
           )
         }
 
-        IconButton(
-          onClick = { audioEngine.toggleMusicMute() },
+        Row(verticalAlignment = Alignment.CenterVertically) {
+          // Mute Toggle
+          IconButton(
+            onClick = { audioEngine.toggleMusicMute() },
+            modifier = Modifier
+              .size(40.dp)
+              .shadow(4.dp, CircleShape)
+              .clip(CircleShape)
+              .background(Color.White)
+              .testTag("mute_toggle_button")
+          ) {
+            Icon(
+              imageVector = if (isMusicMuted) Icons.Default.MusicOff else Icons.Default.MusicNote,
+              contentDescription = "Mute",
+              tint = if (isMusicMuted) Color.Gray else Color(0xFFFF2E7E),
+              modifier = Modifier.size(20.dp)
+            )
+          }
+        }
+      }
+
+      Spacer(modifier = Modifier.height(12.dp))
+
+      // Music Master ON/OFF Banner
+      Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(
+          containerColor = if (isMusicEnabled) Color(0xFFFFF1F2) else Color(0xFFF3F4F6)
+        ),
+        border = BorderStroke(1.dp, if (isMusicEnabled) Color(0xFFFFCCD5) else Color(0xFFE5E7EB))
+      ) {
+        Row(
           modifier = Modifier
-            .size(42.dp)
-            .shadow(6.dp, CircleShape)
-            .clip(CircleShape)
-            .background(Color.White)
-            .testTag("mute_toggle_button")
+            .fillMaxWidth()
+            .padding(horizontal = 14.dp, vertical = 8.dp),
+          verticalAlignment = Alignment.CenterVertically,
+          horizontalArrangement = Arrangement.SpaceBetween
         ) {
-          Icon(
-            imageVector = if (isMusicMuted) Icons.Default.MusicOff else Icons.Default.MusicNote,
-            contentDescription = "Mute",
-            tint = if (isMusicMuted) Color.Gray else Color(0xFFFF2E7E)
+          Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(
+              imageVector = Icons.Default.PowerSettingsNew,
+              contentDescription = null,
+              tint = if (isMusicEnabled) Color(0xFFBE185D) else Color.Gray,
+              modifier = Modifier.size(20.dp)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Column {
+              Text(
+                text = if (isMusicEnabled) "Music ON" else "Music OFF",
+                fontSize = 13.sp,
+                fontWeight = FontWeight.Bold,
+                color = if (isMusicEnabled) Color(0xFF831843) else Color(0xFF4B5563)
+              )
+              Text(
+                text = if (isMusicEnabled) "Plays continuously across all app screens" else "Playback completely stopped",
+                fontSize = 10.sp,
+                color = if (isMusicEnabled) Color(0xFFBE185D) else Color(0xFF6B7280)
+              )
+            }
+          }
+
+          Switch(
+            checked = isMusicEnabled,
+            onCheckedChange = { audioEngine.setMusicPower(it) },
+            modifier = Modifier.testTag("music_power_switch"),
+            colors = SwitchDefaults.colors(
+              checkedThumbColor = Color(0xFFFF2E7E),
+              checkedTrackColor = Color(0xFFFFCCD5),
+              uncheckedThumbColor = Color.Gray,
+              uncheckedTrackColor = Color(0xFFD1D5DB)
+            )
           )
         }
       }
 
-      Spacer(modifier = Modifier.height(14.dp))
+      Spacer(modifier = Modifier.height(12.dp))
 
-      // Mode Switcher: YouTube Video Player vs 3D Turntable Deck
+      // Mode Switcher: Video Player vs Vinyl Turntable Deck
       Row(
         modifier = Modifier
           .fillMaxWidth()
           .clip(RoundedCornerShape(16.dp))
-          .background(Color.White.copy(alpha = 0.9f))
+          .background(Color.White.copy(alpha = 0.95f))
           .padding(4.dp),
         horizontalArrangement = Arrangement.SpaceEvenly
       ) {
@@ -269,7 +340,7 @@ fun MusicPlayerScreen(
             )
             Spacer(modifier = Modifier.width(6.dp))
             Text(
-              text = "YouTube Song 📺",
+              text = "Album Showcase 🎵",
               fontSize = 12.sp,
               fontWeight = FontWeight.Bold,
               color = if (displayMode == MusicDisplayMode.YOUTUBE_PLAYER) Color.White else Color(0xFF831843)
@@ -315,9 +386,8 @@ fun MusicPlayerScreen(
 
       Spacer(modifier = Modifier.height(14.dp))
 
-      // Main Media Showcase: YouTube Player or Turntable Deck
+      // Main Media Showcase: Album Showcase Card or Turntable Deck
       if (displayMode == MusicDisplayMode.YOUTUBE_PLAYER) {
-        // Embedded YouTube Video & Audio Player
         Card(
           modifier = Modifier
             .fillMaxWidth()
@@ -332,66 +402,104 @@ fun MusicPlayerScreen(
                 .fillMaxWidth()
                 .height(210.dp)
                 .clip(RoundedCornerShape(topStart = 26.dp, topEnd = 26.dp))
-                .background(Color.Black)
+                .background(
+                  Brush.verticalGradient(
+                    colors = listOf(Color(0xFF1E1B4B), Color(0xFF0F172A), Color(0xFF31102B))
+                  )
+                ),
+              contentAlignment = Alignment.Center
             ) {
-              val videoId = currentTrack.youtubeVideoId.ifBlank { "dQm7vX18K5M" }
-              AndroidView(
-                modifier = Modifier.fillMaxSize().testTag("youtube_webview_player"),
-                factory = { ctx ->
-                  WebView(ctx).apply {
-                    layoutParams = ViewGroup.LayoutParams(
-                      ViewGroup.LayoutParams.MATCH_PARENT,
-                      ViewGroup.LayoutParams.MATCH_PARENT
-                    )
-                    try {
-                      setLayerType(View.LAYER_TYPE_SOFTWARE, null)
-                    } catch (_: Throwable) {}
-                    settings.javaScriptEnabled = true
-                    settings.domStorageEnabled = true
-                    settings.mediaPlaybackRequiresUserGesture = false
-                    webViewClient = WebViewClient()
-                    webChromeClient = WebChromeClient()
-                  }
-                },
-                update = { webView ->
-                  val embedHtml = """
-                    <!DOCTYPE html>
-                    <html>
-                    <head>
-                      <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-                      <style>
-                        body { margin:0; padding:0; background-color:#000; overflow:hidden; }
-                        .video-box { position:relative; width:100%; height:100vh; }
-                        iframe { width:100%; height:100%; border:none; }
-                      </style>
-                    </head>
-                    <body>
-                      <div class="video-box">
-                        <iframe src="https://www.youtube-nocookie.com/embed/$videoId?autoplay=1&playsinline=1&rel=0&modestbranding=1" 
-                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                                allowfullscreen>
-                        </iframe>
-                      </div>
-                    </body>
-                    </html>
-                  """.trimIndent()
-                  webView.loadDataWithBaseURL("https://www.youtube.com", embedHtml, "text/html", "UTF-8", null)
-                },
-                onRelease = { webView ->
-                  try {
-                    webView.stopLoading()
-                    webView.destroy()
-                  } catch (_: Throwable) {}
+              Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center,
+                modifier = Modifier.padding(16.dp)
+              ) {
+                Box(
+                  modifier = Modifier
+                    .size(80.dp)
+                    .clip(CircleShape)
+                    .background(
+                      Brush.radialGradient(
+                        colors = listOf(Color(0xFFFF5288), Color(0xFFFF2E7E), Color(0xFF831843))
+                      )
+                    ),
+                  contentAlignment = Alignment.Center
+                ) {
+                  Icon(
+                    imageVector = if (isPlaying) Icons.Default.GraphicEq else Icons.Default.MusicNote,
+                    contentDescription = null,
+                    tint = Color.White,
+                    modifier = Modifier.size(42.dp)
+                  )
                 }
-              )
+                Spacer(modifier = Modifier.height(12.dp))
+                Text(
+                  text = currentTrack.title,
+                  fontWeight = FontWeight.Black,
+                  fontSize = 18.sp,
+                  color = Color.White,
+                  textAlign = TextAlign.Center
+                )
+                Text(
+                  text = "Atif Aslam • ${currentTrack.album} (${currentTrack.releaseYear})",
+                  fontSize = 12.sp,
+                  color = Color(0xFFFFD1DC),
+                  fontWeight = FontWeight.Medium
+                )
+                Spacer(modifier = Modifier.height(6.dp))
+                Box(
+                  modifier = Modifier
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(Color(0x33FF2E7E))
+                    .padding(horizontal = 10.dp, vertical = 3.dp)
+                ) {
+                  Text(
+                    text = "High Fidelity Native Audio 🎵",
+                    color = Color(0xFFFF8DA1),
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Bold
+                  )
+                }
+              }
+
+              // Buffering / Loading Overlay
+              if (isBuffering) {
+                Box(
+                  modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.Black.copy(alpha = 0.55f)),
+                  contentAlignment = Alignment.Center
+                ) {
+                  Row(
+                    modifier = Modifier
+                      .clip(RoundedCornerShape(12.dp))
+                      .background(Color.Black.copy(alpha = 0.85f))
+                      .padding(horizontal = 14.dp, vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                  ) {
+                    CircularProgressIndicator(
+                      modifier = Modifier.size(18.dp),
+                      color = Color(0xFFFF2E7E),
+                      strokeWidth = 2.dp
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                      text = "Loading audio... 🎵",
+                      color = Color.White,
+                      fontSize = 12.sp,
+                      fontWeight = FontWeight.SemiBold
+                    )
+                  }
+                }
+              }
             }
 
-            // Video player footer details
+            // Media player footer details
             Row(
               modifier = Modifier
                 .fillMaxWidth()
                 .background(Color(0xFF1E293B))
-                .padding(horizontal = 16.dp, vertical = 12.dp),
+                .padding(horizontal = 16.dp, vertical = 10.dp),
               horizontalArrangement = Arrangement.SpaceBetween,
               verticalAlignment = Alignment.CenterVertically
             ) {
@@ -412,14 +520,22 @@ fun MusicPlayerScreen(
               Box(
                 modifier = Modifier
                   .clip(RoundedCornerShape(8.dp))
-                  .background(Color(0xFFFF0000))
+                  .background(Color(0xFFBE185D))
+                  .clickable {
+                    val videoId = currentTrack.youtubeVideoId.ifBlank { "dQm7vX18K5M" }
+                    val intent = android.content.Intent(
+                      android.content.Intent.ACTION_VIEW,
+                      android.net.Uri.parse("https://www.youtube.com/watch?v=$videoId")
+                    )
+                    try { context.startActivity(intent) } catch (_: Throwable) {}
+                  }
                   .padding(horizontal = 8.dp, vertical = 4.dp)
               ) {
                 Text(
-                  text = "YouTube HD",
+                  text = "Watch Video 📺",
                   color = Color.White,
                   fontSize = 10.sp,
-                  fontWeight = FontWeight.ExtraBold
+                  fontWeight = FontWeight.Bold
                 )
               }
             }
@@ -548,66 +664,51 @@ fun MusicPlayerScreen(
         }
       }
 
-      Spacer(modifier = Modifier.height(12.dp))
-
-      // Direct YouTube Action Buttons (Launch in YouTube App or Search)
-      Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(10.dp)
-      ) {
-        Button(
-          onClick = {
-            val videoId = currentTrack.youtubeVideoId.ifBlank { "dQm7vX18K5M" }
-            val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://www.youtube.com/watch?v=$videoId"))
-            try {
-              context.startActivity(intent)
-            } catch (_: Throwable) {
-              val webIntent = Intent(Intent.ACTION_VIEW, Uri.parse("https://www.youtube.com/watch?v=$videoId"))
-              context.startActivity(webIntent)
-            }
-          },
-          modifier = Modifier.weight(1f).testTag("open_in_youtube_button"),
-          colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF0000)),
-          shape = RoundedCornerShape(14.dp)
-        ) {
-          Icon(
-            imageVector = Icons.Default.PlayArrow,
-            contentDescription = null,
-            tint = Color.White,
-            modifier = Modifier.size(18.dp)
-          )
-          Spacer(modifier = Modifier.width(6.dp))
-          Text(
-            text = "Watch on YouTube 📺",
-            fontSize = 11.5.sp,
-            fontWeight = FontWeight.Bold,
-            color = Color.White
-          )
-        }
-
-        OutlinedButton(
-          onClick = {
-            val query = Uri.encode("Atif Aslam " + currentTrack.title)
-            val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://www.youtube.com/results?search_query=$query"))
-            context.startActivity(intent)
-          },
-          modifier = Modifier.weight(1f).testTag("search_on_youtube_button"),
+      // Playback Error Banner with Retry button
+      errorMessage?.let { err ->
+        Spacer(modifier = Modifier.height(10.dp))
+        Card(
+          modifier = Modifier.fillMaxWidth(),
           shape = RoundedCornerShape(14.dp),
-          border = BorderStroke(1.2.dp, Color(0xFFBE185D))
+          colors = CardDefaults.cardColors(containerColor = Color(0xFFFEF2F2)),
+          border = BorderStroke(1.dp, Color(0xFFFCA5A5))
         ) {
-          Icon(
-            imageVector = Icons.Default.Search,
-            contentDescription = null,
-            tint = Color(0xFFBE185D),
-            modifier = Modifier.size(16.dp)
-          )
-          Spacer(modifier = Modifier.width(6.dp))
-          Text(
-            text = "Search Track 🔍",
-            fontSize = 11.5.sp,
-            fontWeight = FontWeight.Bold,
-            color = Color(0xFFBE185D)
-          )
+          Row(
+            modifier = Modifier
+              .fillMaxWidth()
+              .padding(12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+          ) {
+            Column(modifier = Modifier.weight(1f)) {
+              Text(
+                text = "Audio Notice",
+                fontWeight = FontWeight.Bold,
+                fontSize = 12.sp,
+                color = Color(0xFF991B1B)
+              )
+              Text(
+                text = err,
+                fontSize = 11.sp,
+                color = Color(0xFFB91C1C)
+              )
+            }
+            Spacer(modifier = Modifier.width(8.dp))
+            Button(
+              onClick = { audioEngine.retryCurrentTrack() },
+              colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDC2626)),
+              shape = RoundedCornerShape(10.dp),
+              modifier = Modifier.testTag("retry_audio_button")
+            ) {
+              Icon(
+                imageVector = Icons.Default.Refresh,
+                contentDescription = "Retry",
+                modifier = Modifier.size(14.dp)
+              )
+              Spacer(modifier = Modifier.width(4.dp))
+              Text("Retry", fontSize = 11.sp)
+            }
+          }
         }
       }
 
@@ -650,7 +751,7 @@ fun MusicPlayerScreen(
             Box(
               modifier = Modifier
                 .width(4.5.dp)
-                .height((28 * h).dp)
+                .height((28 * if (isPlaying) h else 0.2f).dp)
                 .clip(RoundedCornerShape(3.dp))
                 .background(
                   Brush.verticalGradient(
@@ -662,15 +763,17 @@ fun MusicPlayerScreen(
         }
       }
 
-      Spacer(modifier = Modifier.height(12.dp))
+      Spacer(modifier = Modifier.height(10.dp))
 
-      // Progress Scrubber Bar
+      // Seekable Progress Scrubber Bar
       Column(modifier = Modifier.fillMaxWidth()) {
         Slider(
-          value = progressSec.toFloat().coerceIn(0f, currentTrack.durationSeconds.toFloat()),
+          value = progressSec.toFloat().coerceIn(0f, totalDuration.toFloat()),
           onValueChange = { audioEngine.seekTo(it.toInt()) },
-          valueRange = 0f..currentTrack.durationSeconds.toFloat(),
-          modifier = Modifier.fillMaxWidth(),
+          valueRange = 0f..totalDuration.toFloat(),
+          modifier = Modifier
+            .fillMaxWidth()
+            .testTag("progress_slider"),
           colors = SliderDefaults.colors(
             thumbColor = Color(0xFFFF2E7E),
             activeTrackColor = Color(0xFFFF5288),
@@ -688,7 +791,7 @@ fun MusicPlayerScreen(
             fontWeight = FontWeight.Bold
           )
           Text(
-            text = formatTime(currentTrack.durationSeconds),
+            text = formatTime(totalDuration),
             fontSize = 11.5.sp,
             color = Color(0xFF9CA3AF),
             fontWeight = FontWeight.Medium
@@ -698,12 +801,30 @@ fun MusicPlayerScreen(
 
       Spacer(modifier = Modifier.height(10.dp))
 
-      // Media Controls
+      // Media Controls Row: Shuffle, Previous, Play/Pause, Next, Repeat
       Row(
         modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.Center,
+        horizontalArrangement = Arrangement.SpaceEvenly,
         verticalAlignment = Alignment.CenterVertically
       ) {
+        // Shuffle Toggle
+        IconButton(
+          onClick = { audioEngine.toggleShuffle() },
+          modifier = Modifier
+            .size(46.dp)
+            .clip(CircleShape)
+            .background(if (isShuffle) Color(0xFFFFE4EC) else Color.White)
+            .testTag("music_shuffle_button")
+        ) {
+          Icon(
+            imageVector = Icons.Default.Shuffle,
+            contentDescription = "Shuffle",
+            tint = if (isShuffle) Color(0xFFFF2E7E) else Color(0xFF9CA3AF),
+            modifier = Modifier.size(22.dp)
+          )
+        }
+
+        // Previous Song
         IconButton(
           onClick = { audioEngine.previousTrack() },
           modifier = Modifier
@@ -721,8 +842,7 @@ fun MusicPlayerScreen(
           )
         }
 
-        Spacer(modifier = Modifier.width(24.dp))
-
+        // Main Play / Pause Button
         Box(
           modifier = Modifier
             .size(72.dp)
@@ -745,8 +865,7 @@ fun MusicPlayerScreen(
           )
         }
 
-        Spacer(modifier = Modifier.width(24.dp))
-
+        // Next Song
         IconButton(
           onClick = { audioEngine.nextTrack() },
           modifier = Modifier
@@ -761,6 +880,25 @@ fun MusicPlayerScreen(
             contentDescription = "Next",
             tint = Color(0xFFBE185D),
             modifier = Modifier.size(30.dp)
+          )
+        }
+
+        // Repeat Toggle (All, One, Off)
+        IconButton(
+          onClick = { audioEngine.toggleRepeat() },
+          modifier = Modifier
+            .size(46.dp)
+            .clip(CircleShape)
+            .background(
+              if (repeatMode != PlaybackRepeatMode.OFF) Color(0xFFFFE4EC) else Color.White
+            )
+            .testTag("music_repeat_button")
+        ) {
+          Icon(
+            imageVector = if (repeatMode == PlaybackRepeatMode.REPEAT_ONE) Icons.Default.RepeatOne else Icons.Default.Repeat,
+            contentDescription = "Repeat",
+            tint = if (repeatMode != PlaybackRepeatMode.OFF) Color(0xFFFF2E7E) else Color(0xFF9CA3AF),
+            modifier = Modifier.size(22.dp)
           )
         }
       }
@@ -889,7 +1027,7 @@ fun MusicPlayerScreen(
                 color = Color(0xFF831843)
               )
               Text(
-                text = "Original Official Tracks & YouTube Videos",
+                text = "Original In-App Tracks & Playback",
                 fontSize = 10.5.sp,
                 color = Color(0xFF9CA3AF)
               )
@@ -931,7 +1069,6 @@ fun MusicPlayerScreen(
                 )
                 .clickable {
                   audioEngine.playTrack(index)
-                  displayMode = MusicDisplayMode.YOUTUBE_PLAYER
                 }
                 .padding(horizontal = 14.dp, vertical = 12.dp)
                 .testTag("atif_track_$index"),
@@ -950,7 +1087,7 @@ fun MusicPlayerScreen(
                   contentAlignment = Alignment.Center
                 ) {
                   Icon(
-                    imageVector = if (isCurrent) Icons.Default.Videocam else Icons.Default.MusicNote,
+                    imageVector = if (isCurrent && isPlaying) Icons.Default.GraphicEq else Icons.Default.MusicNote,
                     contentDescription = null,
                     tint = if (isCurrent) Color.White else Color(0xFFBE185D),
                     modifier = Modifier.size(20.dp)
@@ -982,7 +1119,7 @@ fun MusicPlayerScreen(
                     .padding(horizontal = 8.dp, vertical = 3.dp)
                 ) {
                   Text(
-                    text = "Playing ▶",
+                    text = if (isPlaying) "Playing ▶" else "Paused ⏸",
                     fontSize = 10.sp,
                     color = Color.White,
                     fontWeight = FontWeight.Bold
@@ -990,20 +1127,6 @@ fun MusicPlayerScreen(
                 }
               } else {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                  Box(
-                    modifier = Modifier
-                      .clip(RoundedCornerShape(6.dp))
-                      .background(Color(0xFFF1F5F9))
-                      .padding(horizontal = 6.dp, vertical = 2.dp)
-                  ) {
-                    Text(
-                      text = "▶ YouTube",
-                      fontSize = 9.sp,
-                      color = Color(0xFF64748B),
-                      fontWeight = FontWeight.Medium
-                    )
-                  }
-                  Spacer(modifier = Modifier.width(6.dp))
                   Text(
                     text = formatTime(track.durationSeconds),
                     fontSize = 11.sp,
