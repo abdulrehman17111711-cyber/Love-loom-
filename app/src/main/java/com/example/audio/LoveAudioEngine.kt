@@ -32,7 +32,8 @@ data class AudioTrackInfo(
   val lyricsUrdu: String,
   val lyricsRoman: String,
   val durationSeconds: Int,
-  val releaseYear: String
+  val releaseYear: String,
+  val youtubeVideoId: String = ""
 )
 
 class LoveAudioEngine(private val context: Context) {
@@ -71,7 +72,8 @@ class LoveAudioEngine(private val context: Context) {
       lyricsUrdu = "کچھ اس طرح تیری پلکیں میری پلکوں سے ملا دے\nآنسو تیرے سارے میری پلکوں پہ سجا دے",
       lyricsRoman = "Kuch is tarah teri palkein meri palkon se mila de, aansoo tere saare meri palkon pe sajaa de...",
       durationSeconds = 314,
-      releaseYear = "2006"
+      releaseYear = "2006",
+      youtubeVideoId = "dQm7vX18K5M"
     ),
     AudioTrackInfo(
       id = 1,
@@ -81,7 +83,8 @@ class LoveAudioEngine(private val context: Context) {
       lyricsUrdu = "دوری صحیح جائے نہ، خاموشی صحیح جائے نہ\nاک نشہ ہے، اک خمار ہے، تیرا ہی پیار ہے",
       lyricsRoman = "Doorie sahi jaaye na, khamoshi sahi jaaye na... ik nasha hai, ik khumaar hai...",
       durationSeconds = 295,
-      releaseYear = "2006"
+      releaseYear = "2006",
+      youtubeVideoId = "8XfT55B1y14"
     ),
     AudioTrackInfo(
       id = 2,
@@ -91,7 +94,8 @@ class LoveAudioEngine(private val context: Context) {
       lyricsUrdu = "جدا ہو کے بھی تو مجھ میں کہیں باقی ہے\nپلکوں پہ بن کے آنسو تو چلی آتی ہے",
       lyricsRoman = "Juda hoke bhi tu mujhmein kahin baaqi hai, palkon pe ban ke aansoo tu chali aati hai...",
       durationSeconds = 268,
-      releaseYear = "2004"
+      releaseYear = "2004",
+      youtubeVideoId = "i6wLpT14_rQ"
     ),
     AudioTrackInfo(
       id = 3,
@@ -101,7 +105,8 @@ class LoveAudioEngine(private val context: Context) {
       lyricsUrdu = "ماہی وے محبتاں سچیاں نے\nتیرے باجھوں دل نہیں لگدا، ماہی وے",
       lyricsRoman = "Mahi ve mohabbatan sachiyan ne, tere baajhon dil nahi lagda, mahi ve...",
       durationSeconds = 242,
-      releaseYear = "2006"
+      releaseYear = "2006",
+      youtubeVideoId = "v2WkY4d_w0M"
     ),
     AudioTrackInfo(
       id = 4,
@@ -109,9 +114,10 @@ class LoveAudioEngine(private val context: Context) {
       album = "Velo Sound Station",
       mood = "Romantic Folk-Pop Melody",
       lyricsUrdu = "کدی تے ہس بول وے، نہ جند رول وے\nتو آ جا دل جانیاں وے، تیرے نال پیار ہے",
-      lyricsRoman = "Kadi te has bol ve, na jind rol ve, tu aaja dil jaaniyan ve...",
+      lyricsRoman = "Kadi te has bol ve, na jind rol ve, tu aaja دل jaaniyan ve...",
       durationSeconds = 230,
-      releaseYear = "2020"
+      releaseYear = "2020",
+      youtubeVideoId = "5J6e792k7s4"
     ),
     AudioTrackInfo(
       id = 5,
@@ -121,7 +127,8 @@ class LoveAudioEngine(private val context: Context) {
       lyricsUrdu = "بھلا دینا مجھے آساں نہیں\nیقین تو کر میرے ہمسفر، تیرے بنا ادھورا ہوں",
       lyricsRoman = "Bhula dena mujhe aasan nahi, yakeen toh kar mere humsafar...",
       durationSeconds = 240,
-      releaseYear = "2006"
+      releaseYear = "2006",
+      youtubeVideoId = "e2u7uY8k3r8"
     ),
     AudioTrackInfo(
       id = 6,
@@ -131,7 +138,74 @@ class LoveAudioEngine(private val context: Context) {
       lyricsUrdu = "یہ احساس ہے کیا، جو دل کو چھو جائے\nتیری یادوں میں کھو کے، راتیں گزر جائیں",
       lyricsRoman = "Yeh ehsaas hai kya, jo dil ko chhoo jaaye, teri yaadon mein kho ke...",
       durationSeconds = 224,
-      releaseYear = "2004"
+      releaseYear = "2004",
+      youtubeVideoId = "Hw9N_z8LgB0"
+    ),
+    AudioTrackInfo(
+      id = 7,
+      title = "Pehli Nazar Mein",
+      album = "Race",
+      mood = "All-Time Romantic Mega Hit",
+      lyricsUrdu = "پہلی نظر میں کیسا جادو کر دیا\nتیرا بن بیٹھا ہے میرا جیا",
+      lyricsRoman = "Pehli nazar mein kaisa jaadu kar diya, tera ban baitha hai mera jiya...",
+      durationSeconds = 312,
+      releaseYear = "2008",
+      youtubeVideoId = "BadBAMnpXsc"
+    ),
+    AudioTrackInfo(
+      id = 8,
+      title = "Tera Hone Laga Hoon",
+      album = "Ajab Prem Ki Ghazab Kahani",
+      mood = "Magical Romantic Duet",
+      lyricsUrdu = "ہوا یہ کیا اثر، تیرا ہونے لگا ہوں\nکھونے لگا ہوں، تیرے پیار میں",
+      lyricsRoman = "Shining in the setting sun like a pearl upon the ocean... tera hone laga hoon...",
+      durationSeconds = 300,
+      releaseYear = "2009",
+      youtubeVideoId = "r_8ydgGph00"
+    ),
+    AudioTrackInfo(
+      id = 9,
+      title = "Dil Diyan Gallan",
+      album = "Tiger Zinda Hai",
+      mood = "Soulful Acoustic Romance",
+      lyricsUrdu = "کچی ڈوریاں سے مَیں نوں توں باندھ لے\nدل دیاں گلاں، کراں گے نال نال بہہ کے",
+      lyricsRoman = "Dil diyan gallan, karaange naal naal beh ke, akh naale akh nu mila ke...",
+      durationSeconds = 260,
+      releaseYear = "2017",
+      youtubeVideoId = "mevO4I0f5lg"
+    ),
+    AudioTrackInfo(
+      id = 10,
+      title = "Jeena Jeena",
+      album = "Badlapur",
+      mood = "Deep Romantic Devotion",
+      lyricsUrdu = "دہلیز پہ میرے دل کی جو رکھے ہیں تو نے قدم\nسیکھا میں نے جینا جینا کیسے جینا",
+      lyricsRoman = "Dehleez pe mere dil ki jo rakhe hain tune qadam... seekha maine jeena jeena...",
+      durationSeconds = 230,
+      releaseYear = "2015",
+      youtubeVideoId = "zfdK-L6O954"
+    ),
+    AudioTrackInfo(
+      id = 11,
+      title = "Tu Jaane Na",
+      album = "Ajab Prem Ki Ghazab Kahani",
+      mood = "Heartfelt Love Melody",
+      lyricsUrdu = "کیسے بتائیں کیوں تجھ کو چاہیں، یارا بتا نہ پائیں\nتو جانے نہ، تو جانے نہ",
+      lyricsRoman = "Kaise batayein kyun tujhko chaahein, yaara bata na paayein...",
+      durationSeconds = 341,
+      releaseYear = "2009",
+      youtubeVideoId = "X3b37X-xL_Q"
+    ),
+    AudioTrackInfo(
+      id = 12,
+      title = "Tere Sang Yaara",
+      album = "Rustom",
+      mood = "Pure Romantic Serenade",
+      lyricsUrdu = "تیرے سنگ یارا، خوش رنگ بہارا\nتو رات کالی، میں چاند ستارہ",
+      lyricsRoman = "Tere sang yaara, khush rang bahaara, tu raat kaali main chaand sitaara...",
+      durationSeconds = 290,
+      releaseYear = "2016",
+      youtubeVideoId = "f6vYpXf_7Xk"
     )
   )
 
@@ -301,141 +375,23 @@ class LoveAudioEngine(private val context: Context) {
   private fun startSynthesisLoop() {
     musicJob?.cancel()
     musicJob = scope.launch {
-      val track = getOrCreateAudioTrack() ?: run {
-        while (isActive && _isPlaying.value) {
-          delay(1000)
-          val tIdx = _currentTrackIndex.value
-          _trackProgressSeconds.value = (_trackProgressSeconds.value + 1) % tracks[tIdx].durationSeconds
-        }
-        return@launch
-      }
-
-      try {
-        if (track.playState != AudioTrack.PLAYSTATE_PLAYING) {
-          track.play()
-        }
-      } catch (_: Throwable) {}
-
-      // Melodies accurately matching authentic Pakistani Atif Aslam romantic hits:
-      // Note frequencies (Hz):
-      // C4=261.6, D4=293.7, E4=329.6, F4=349.2, F#4=369.9, G4=392.0, A4=440.0, B4=493.9, C5=523.3, D5=587.3, E5=659.3, F#5=739.9, G5=784.0
-      val pakistaniAtifMelodies: List<List<Pair<Double, Double>>> = listOf(
-        // Track 0: "Kuch Is Tarah" (Doorie album)
-        // "Kuch is tarah teri palkein meri palkon se mila de, aansoo tere saare meri palkon pe sajaa de"
-        listOf(
-          Pair(392.00, 0.45), Pair(440.00, 0.40), Pair(493.88, 0.45), Pair(523.25, 0.55),
-          Pair(493.88, 0.40), Pair(440.00, 0.40), Pair(392.00, 0.65),
-          Pair(329.63, 0.40), Pair(369.99, 0.40), Pair(392.00, 0.45), Pair(440.00, 0.50),
-          Pair(392.00, 0.40), Pair(369.99, 0.40), Pair(329.63, 0.70),
-          Pair(392.00, 0.45), Pair(493.88, 0.45), Pair(587.33, 0.50), Pair(523.25, 0.45),
-          Pair(493.88, 0.40), Pair(440.00, 0.60),
-          Pair(440.00, 0.40), Pair(392.00, 0.40), Pair(369.99, 0.45), Pair(329.63, 0.40),
-          Pair(293.66, 0.40), Pair(329.63, 0.75)
-        ),
-        // Track 1: "Doorie" (Doorie album title track)
-        // "Doorie sahi jaaye na, khamoshi sahi jaaye na, haan ik nasha hai, ik khumaar hai"
-        listOf(
-          Pair(329.63, 0.55), Pair(392.00, 0.45), Pair(493.88, 0.55), Pair(440.00, 0.45),
-          Pair(392.00, 0.40), Pair(369.99, 0.40), Pair(329.63, 0.70),
-          Pair(329.63, 0.55), Pair(392.00, 0.45), Pair(493.88, 0.55), Pair(440.00, 0.45),
-          Pair(392.00, 0.40), Pair(369.99, 0.40), Pair(329.63, 0.70),
-          Pair(493.88, 0.40), Pair(523.25, 0.40), Pair(587.33, 0.50), Pair(523.25, 0.40),
-          Pair(493.88, 0.40), Pair(440.00, 0.40), Pair(392.00, 0.45), Pair(440.00, 0.45),
-          Pair(493.88, 0.75)
-        ),
-        // Track 2: "Aadat (Acoustic)" (Jal Pari album)
-        // "Juda hoke bhi tu mujhmein kahin baaqi hai, palkon pe ban ke aansoo tu chali aati hai"
-        listOf(
-          Pair(369.99, 0.45), Pair(392.00, 0.40), Pair(440.00, 0.55), Pair(392.00, 0.40),
-          Pair(369.99, 0.40), Pair(329.63, 0.45), Pair(293.66, 0.70),
-          Pair(329.63, 0.40), Pair(369.99, 0.40), Pair(392.00, 0.50), Pair(369.99, 0.40),
-          Pair(329.63, 0.40), Pair(293.66, 0.40), Pair(277.18, 0.40), Pair(293.66, 0.70),
-          Pair(293.66, 0.40), Pair(369.99, 0.45), Pair(440.00, 0.55), Pair(392.00, 0.45),
-          Pair(369.99, 0.40), Pair(329.63, 0.40), Pair(369.99, 0.45), Pair(293.66, 0.75)
-        ),
-        // Track 3: "Mahi Ve" (Doorie album)
-        // "Mahi ve mohabbatan sachiyan ne, tere baajhon dil nahi lagda"
-        listOf(
-          Pair(392.00, 0.45), Pair(523.25, 0.50), Pair(493.88, 0.40), Pair(440.00, 0.40),
-          Pair(392.00, 0.50), Pair(329.63, 0.40), Pair(349.23, 0.40), Pair(392.00, 0.45),
-          Pair(440.00, 0.45), Pair(392.00, 0.65),
-          Pair(349.23, 0.40), Pair(392.00, 0.40), Pair(440.00, 0.45), Pair(493.88, 0.45),
-          Pair(440.00, 0.40), Pair(392.00, 0.40), Pair(349.23, 0.40), Pair(329.63, 0.70)
-        ),
-        // Track 4: "Kadi Te Has Bol Ve" (Velo Sound Station)
-        // "Kadi te has bol ve, na jind rol ve, tu aaja dil jaaniyan ve"
-        listOf(
-          Pair(293.66, 0.35), Pair(329.63, 0.35), Pair(392.00, 0.45), Pair(392.00, 0.45),
-          Pair(440.00, 0.45), Pair(493.88, 0.50), Pair(440.00, 0.40), Pair(392.00, 0.45),
-          Pair(329.63, 0.40), Pair(392.00, 0.65),
-          Pair(493.88, 0.40), Pair(523.25, 0.45), Pair(493.88, 0.40), Pair(440.00, 0.40),
-          Pair(392.00, 0.45), Pair(440.00, 0.45), Pair(392.00, 0.70)
-        ),
-        // Track 5: "Yakeen" (Doorie album)
-        // "Bhula dena mujhe aasan nahi, yakeen toh kar mere humsafar"
-        listOf(
-          Pair(329.63, 0.45), Pair(369.99, 0.40), Pair(392.00, 0.45), Pair(369.99, 0.40),
-          Pair(329.63, 0.40), Pair(293.66, 0.40), Pair(329.63, 0.50), Pair(392.00, 0.45),
-          Pair(369.99, 0.40), Pair(329.63, 0.70),
-          Pair(392.00, 0.40), Pair(440.00, 0.40), Pair(493.88, 0.50), Pair(440.00, 0.40),
-          Pair(392.00, 0.40), Pair(369.99, 0.40), Pair(392.00, 0.45), Pair(329.63, 0.75)
-        ),
-        // Track 6: "Ehsaas" (Jal Pari album)
-        // "Yeh ehsaas hai kya, jo dil ko chhoo jaaye"
-        listOf(
-          Pair(261.63, 0.40), Pair(329.63, 0.45), Pair(392.00, 0.50), Pair(440.00, 0.45),
-          Pair(392.00, 0.40), Pair(329.63, 0.40), Pair(293.66, 0.65),
-          Pair(293.66, 0.40), Pair(349.23, 0.40), Pair(440.00, 0.50), Pair(493.88, 0.45),
-          Pair(440.00, 0.40), Pair(349.23, 0.40), Pair(329.63, 0.70)
-        )
-      )
-
-      var step = 0
-
       while (isActive && _isPlaying.value) {
+        delay(1000)
         val trackIdx = _currentTrackIndex.value
-        val scoreList = pakistaniAtifMelodies[trackIdx % pakistaniAtifMelodies.size]
-        val note = scoreList[step % scoreList.size]
-        val freq = note.first
-        val durationSec = note.second
-        val numSamples = (sampleRate * durationSec).toInt()
-        val buffer = ShortArray(numSamples)
-
-        val masterVol = if (_isMusicMuted.value) 0.0 else _volume.value.toDouble() * 0.42
-
-        for (i in 0 until numSamples) {
-          val t = i.toDouble() / sampleRate
-          // Rich acoustic bell/guitar envelope: fast pluck, resonant warm decay
-          val envelope = exp(-2.8 * t / durationSec)
-          // Soft vibrato for authentic romantic singing touch
-          val vibrato = 1.0 + 0.008 * sin(2.0 * PI * 5.0 * t)
-          val actualFreq = freq * vibrato
-
-          // Fundamental + warm harmonics (guitar/harmonium timbre)
-          val wave1 = sin(2.0 * PI * actualFreq * t)
-          val wave2 = 0.38 * sin(4.0 * PI * actualFreq * t)
-          val wave3 = 0.16 * sin(6.0 * PI * actualFreq * t)
-          val wave4 = 0.07 * sin(8.0 * PI * actualFreq * t)
-
-          val sample = (wave1 + wave2 + wave3 + wave4) * envelope * masterVol
-          buffer[i] = (sample * 32767.0).toInt().coerceIn(-32767, 32767).toShort()
+        val track = tracks.getOrNull(trackIdx)
+        val duration = track?.durationSeconds ?: 200
+        val nextSec = _trackProgressSeconds.value + 1
+        if (nextSec >= duration) {
+          _trackProgressSeconds.value = 0
+          nextTrack()
+        } else {
+          _trackProgressSeconds.value = nextSec
         }
-
-        try {
-          audioLock.withLock {
-            if (audioTrack?.state == AudioTrack.STATE_INITIALIZED) {
-              audioTrack?.write(buffer, 0, buffer.size, AudioTrack.WRITE_NON_BLOCKING)
-            }
-          }
-        } catch (_: Throwable) {}
-
-        step++
-        _trackProgressSeconds.value = (_trackProgressSeconds.value + 1) % tracks[trackIdx].durationSeconds
-        // Delay exact duration of note to keep audio stream smooth and synchronized
-        delay((durationSec * 1000).toLong().coerceAtLeast(50L))
       }
     }
   }
+
+
 
   // Sound Effects with optional tactile haptics
   fun playHeartCollectSound() {

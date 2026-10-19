@@ -59,44 +59,67 @@ class LoveLoomRepository(private val dao: LoveLoomDao) {
     dao.insertOrUpdateGameRecord(updated)
   }
 
+  suspend fun updateRecipientNameInLetters(newName: String) {
+    val existing = dao.getAllLetters()
+    val updated = existing.map { letter ->
+      if (!letter.isCustom) {
+        letter.copy(
+          title = letter.title.replace("Ayesha", newName, ignoreCase = true).replace("عائشہ", newName),
+          content = letter.content.replace("Ayesha", newName, ignoreCase = true).replace("عائشہ", newName)
+        )
+      } else {
+        letter
+      }
+    }
+    dao.insertAllLetters(updated)
+  }
+
   suspend fun seedDefaultsIfEmpty(recipientName: String) {
     // Seed default letters if empty
     if (dao.getLetterCount() == 0) {
       val defaultLetters = listOf(
         LoveLetter(
-          title = "Kuch Is Tarah — To My Soulmate",
-          content = "Dear $recipientName,\n\n“کچھ اس طرح تیری پلکیں میری پلکوں سے ملا دے\nآنسو تیرے سارے میری پلکوں پہ سجا دے”\n\nLike Atif Aslam’s soulful Pakistani romance, every breath of mine finds its melody in your laughter. You are the warmth in my heart, the calm in my storms, and my forever favorite song. Happy Birthday, my shining light! 🇵🇰💖🎶",
+          title = "کچھ اس طرح — $recipientName کے نام",
+          content = "پیاری $recipientName،\n\n“کچھ اس طرح تیری پلکیں میری پلکوں سے ملا دے\nآنسو تیرے سارے میری پلکوں پہ سجا دے”\n\nتیرے وجود سے میری دنیا میں رنگ اور روشنی ہے۔ جب بھی عاطف اسلم کے رومانوی نغمے گونجتے ہیں، ہر بول میں صرف تیرا ہی چہرہ نظر آتا ہے۔\n\nاے $recipientName، تیرے بنا یہ دل ادھورا ہے۔ سالگرہ بہت بہت مبارک ہو میری جان! 🇵🇰💖🎶",
           category = "Poetry & Romance",
           dateCreated = "Special",
           isFavorite = true,
           isCustom = false
         ),
         LoveLetter(
-          title = "My Beautiful Birthday Star",
-          content = "Dear $recipientName,\n\nOn this special day, the world became infinitely brighter and more magical because you were born. Every smile of yours lights up my universe. I hope your birthday is filled with all the joy, sweetness, and cuddles you bring to everyone around you. Happy Birthday, my love! 🎂💖",
-          category = "Birthday",
-          dateCreated = "Today",
+          title = "پہلی نظر میں — رومانوی غزل برائے $recipientName",
+          content = "میری خوبصورت $recipientName کے نام،\n\n“پہلی نظر میں کیسا جادو کر دیا\nتیرا بن بیٹھا ہے میرا جیا\nجانے کیا ہوگا، کیا ہوگا کیا پتا”\n\nجس دن تم میری زندگی میں آئیں، اس دن ہر خواب حقیقت بن گیا۔ تمہاری مسکراہٹ میری سب سے بڑی خوشی ہے اور تمہاری آنکھیں میری سب سے پیاری دعا۔\n\nتم ہمیشہ ایسے ہی مسکراتی رہو، $recipientName! 🌸✨",
+          category = "Urdu Poetry",
+          dateCreated = "Special",
           isFavorite = true,
           isCustom = false
         ),
         LoveLetter(
-          title = "A Cuddle For Every Star",
-          content = "Dear $recipientName,\n\nIf I had a soft rose petal for every time you made me smile, our garden would overflow to the moon and back. Thank you for being the sweetest, most caring soul in my life. You make every ordinary day feel like a magical fairy tale. 🌸🐻",
+          title = "دوری صحیح جائے نہ — محبت نامہ",
+          content = "میری جان $recipientName،\n\n“دوری صحیح جائے نہ، خاموشی صحیح جائے نہ\nاک نشہ ہے، اک خمار ہے، تیرا ہی پیار ہے”\n\nچاہے دنیا کتنی بھی بڑی کیوں نہ ہو، میرے دل کا راستہ ہمیشہ تیری طرف ہی جاتا ہے۔ ہر لمحہ تیری یاد دل کے تار چھیڑتی ہے۔\n\nتم میری زندگی کا سب سے انمول تحفہ ہو، $recipientName! 💌🧸",
           category = "Romantic",
           dateCreated = "Special",
           isFavorite = true,
           isCustom = false
         ),
         LoveLetter(
-          title = "Forever Beside You",
-          content = "To my dearest $recipientName,\n\nThrough every season, sunny days and gentle rain, my favorite place in the world is simply walking beside you, holding your hand. Here is to making countless more unforgettable memories together. 🌟✨",
-          category = "Proposal",
+          title = "جینا جینا — سالگرہ کی دعا",
+          content = "میری پیاری اور سب سے خاص $recipientName،\n\n“دہلیز پہ میرے دل کی جو رکھے ہیں تو نے قدم\nتیرے نام پہ میری زندگی لکھ دی میرے ہمدم\nہاں سیکھا میں نے جینا جینا کیسے جینا”\n\nخدا کرے تمہاری زندگی کا ہر سال خوشیوں سے بھرپور ہو، ہر دکھ تم سے دور رہے اور ہماری محبت یونہی ہمیشہ قائم رہے۔ سالگرہ مبارک $recipientName! 🎂🎈💖",
+          category = "Birthday",
+          dateCreated = "Today",
+          isFavorite = true,
+          isCustom = false
+        ),
+        LoveLetter(
+          title = "A Cuddle For Every Star — To $recipientName",
+          content = "Dear $recipientName,\n\nIf I had a soft rose petal for every time you made me smile, our garden would overflow to the moon and back. Thank you for being the sweetest, most caring soul in my life. You make every ordinary day feel like a magical fairy tale. 🌸🐻",
+          category = "Romantic",
           dateCreated = "Special",
           isFavorite = false,
           isCustom = false
         ),
         LoveLetter(
-          title = "The Sweetest Secret",
+          title = "The Sweetest Secret Under the Stars",
           content = "Dear $recipientName,\n\nDo you know what the two little bears whisper to each other every night under the glowing stars? They whisper that $recipientName is the kindest, cutest, most wonderful person in the whole universe! 💌🧸",
           category = "Cute",
           dateCreated = "Special",

@@ -307,6 +307,9 @@ class MainActivity : ComponentActivity() {
                     onDeleteLetter = { letter ->
                       viewModel.deleteLetter(letter)
                     },
+                    onUpdateRecipientName = { newName ->
+                      viewModel.updateRecipientName(newName)
+                    },
                     onBack = { viewModel.navigateBack() },
                     reducedMotion = userProfile.reducedMotion
                   )

@@ -70,15 +70,26 @@ fun LoveLettersScreen(
   onAddLetter: (title: String, content: String, category: String) -> Unit,
   onDeleteLetter: (LoveLetter) -> Unit,
   onBack: () -> Unit,
+  onUpdateRecipientName: ((String) -> Unit)? = null,
   reducedMotion: Boolean = false
 ) {
   val context = LocalContext.current
   var selectedLetter by remember { mutableStateOf<LoveLetter?>(null) }
   var showAddDialog by remember { mutableStateOf(false) }
+  var showEditNameDialog by remember { mutableStateOf(false) }
+  var tempName by remember { mutableStateOf(recipientName) }
 
   var newTitle by remember { mutableStateOf("") }
   var newContent by remember { mutableStateOf("") }
   var newCategory by remember { mutableStateOf("Romantic") }
+
+  fun formatForRecipient(rawText: String): String {
+    val targetName = recipientName.trim().ifBlank { "My Love" }
+    return rawText
+      .replace("Ayesha", targetName, ignoreCase = true)
+      .replace("عائشہ", targetName)
+      .replace("{{NAME}}", targetName)
+  }
 
   Box(
     modifier = Modifier
@@ -113,9 +124,9 @@ fun LoveLettersScreen(
         }
 
         Text(
-          text = "Love Letters 💌",
+          text = "Poetry & Love Letters 💌",
           fontWeight = FontWeight.Bold,
-          fontSize = 18.sp,
+          fontSize = 17.sp,
           color = MaterialTheme.colorScheme.primary
         )
 
@@ -131,7 +142,69 @@ fun LoveLettersScreen(
         }
       }
 
-      Spacer(modifier = Modifier.height(14.dp))
+      Spacer(modifier = Modifier.height(10.dp))
+
+      // Dynamic Name Personalization Banner
+      Card(
+        modifier = Modifier
+          .fillMaxWidth()
+          .clip(RoundedCornerShape(16.dp))
+          .clickable {
+            tempName = recipientName
+            showEditNameDialog = true
+          }
+          .testTag("personalize_name_banner"),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.92f)),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+      ) {
+        Row(
+          modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 14.dp, vertical = 10.dp),
+          horizontalArrangement = Arrangement.SpaceBetween,
+          verticalAlignment = Alignment.CenterVertically
+        ) {
+          Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(
+              imageVector = Icons.Default.Favorite,
+              contentDescription = null,
+              tint = Color(0xFFFF2E7E),
+              modifier = Modifier.size(18.dp)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Column {
+              Text(
+                text = "Dedicated to: $recipientName",
+                fontSize = 13.5.sp,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.primary
+              )
+              Text(
+                text = "All Urdu poetry & shers are customized for this name",
+                fontSize = 10.5.sp,
+                color = Color.Gray
+              )
+            }
+          }
+
+          Box(
+            modifier = Modifier
+              .clip(RoundedCornerShape(8.dp))
+              .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f))
+              .padding(horizontal = 8.dp, vertical = 4.dp)
+          ) {
+            Text(
+              text = "Edit ✏️",
+              fontSize = 11.sp,
+              fontWeight = FontWeight.Bold,
+              color = MaterialTheme.colorScheme.primary
+            )
+          }
+        }
+      }
+
+      Spacer(modifier = Modifier.height(10.dp))
 
       LazyColumn(
         modifier = Modifier.fillMaxSize(),
@@ -140,6 +213,8 @@ fun LoveLettersScreen(
       ) {
         items(letters) { letter ->
           val isExpanded = selectedLetter?.id == letter.id
+          val formattedTitle = formatForRecipient(letter.title)
+          val formattedContent = formatForRecipient(letter.content)
 
           Card(
             modifier = Modifier
@@ -174,7 +249,7 @@ fun LoveLettersScreen(
                   )
                   Spacer(modifier = Modifier.width(8.dp))
                   Text(
-                    text = letter.title,
+                    text = formattedTitle,
                     fontWeight = FontWeight.Bold,
                     fontSize = 15.sp,
                     color = MaterialTheme.colorScheme.onSurface
@@ -199,7 +274,7 @@ fun LoveLettersScreen(
               Spacer(modifier = Modifier.height(8.dp))
 
               Text(
-                text = if (isExpanded) letter.content else letter.content.take(110) + "...",
+                text = if (isExpanded) formattedContent else formattedContent.take(110) + "...",
                 fontSize = 13.5.sp,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 lineHeight = 22.sp,
@@ -216,9 +291,9 @@ fun LoveLettersScreen(
                   IconButton(
                     onClick = {
                       val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                      val clip = ClipData.newPlainText("Love Letter", letter.content)
+                      val clip = ClipData.newPlainText("Love Letter", formattedContent)
                       clipboard.setPrimaryClip(clip)
-                      Toast.makeText(context, "Letter copied to clipboard! 📋", Toast.LENGTH_SHORT).show()
+                      Toast.makeText(context, "Poetry & letter copied to clipboard! 📋", Toast.LENGTH_SHORT).show()
                     },
                     modifier = Modifier.testTag("copy_letter_button")
                   ) {
@@ -230,7 +305,7 @@ fun LoveLettersScreen(
                     onClick = {
                       val sendIntent = Intent().apply {
                         action = Intent.ACTION_SEND
-                        putExtra(Intent.EXTRA_TEXT, "${letter.title}\n\n${letter.content}\n\nShared with LoveLoom 3D 💖")
+                        putExtra(Intent.EXTRA_TEXT, "$formattedTitle\n\n$formattedContent\n\nShared with LoveLoom 3D 💖")
                         type = "text/plain"
                       }
                       context.startActivity(Intent.createChooser(sendIntent, "Share Love Letter"))
@@ -301,6 +376,53 @@ fun LoveLettersScreen(
         },
         dismissButton = {
           TextButton(onClick = { showAddDialog = false }) {
+            Text("Cancel")
+          }
+        }
+      )
+    }
+
+    // Modal to change/personalize recipient name for all poetry
+    if (showEditNameDialog) {
+      AlertDialog(
+        onDismissRequest = { showEditNameDialog = false },
+        title = {
+          Text("Personalize Name / نام تبدیل کریں ✍️", fontWeight = FontWeight.Bold, fontSize = 17.sp)
+        },
+        text = {
+          Column {
+            Text(
+              text = "Enter the name of your special someone. All Urdu poetry, letters, and cards will be instantly dedicated to this name!",
+              fontSize = 12.5.sp,
+              color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+            OutlinedTextField(
+              value = tempName,
+              onValueChange = { tempName = it },
+              label = { Text("Name / نام") },
+              placeholder = { Text("e.g., Ayesha, Noor, Fatima...") },
+              singleLine = true,
+              modifier = Modifier.fillMaxWidth().testTag("edit_poetry_name_input")
+            )
+          }
+        },
+        confirmButton = {
+          Button(
+            onClick = {
+              if (tempName.isNotBlank()) {
+                onUpdateRecipientName?.invoke(tempName.trim())
+                showEditNameDialog = false
+              }
+            },
+            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+            modifier = Modifier.testTag("save_poetry_name_button")
+          ) {
+            Text("Update Name 💖")
+          }
+        },
+        dismissButton = {
+          TextButton(onClick = { showEditNameDialog = false }) {
             Text("Cancel")
           }
         }

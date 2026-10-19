@@ -60,7 +60,7 @@ fun WelcomeScreen(
   onNameConfirmed: (String) -> Unit,
   reducedMotion: Boolean = false
 ) {
-  var name by remember { mutableStateOf(initialName.ifBlank { "Ayesha" }) }
+  var name by remember { mutableStateOf(if (initialName.isNotBlank() && initialName != "Ayesha") initialName else "") }
   var errorText by remember { mutableStateOf("") }
 
   Box(

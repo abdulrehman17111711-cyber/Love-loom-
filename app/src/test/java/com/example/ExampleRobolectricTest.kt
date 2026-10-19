@@ -69,11 +69,12 @@ class ExampleRobolectricTest {
     val audioEngine = com.example.audio.LoveAudioEngine(context)
     val tracks = audioEngine.tracks
 
-    assertEquals(7, tracks.size)
+    assertEquals(13, tracks.size)
     assertEquals("Kuch Is Tarah", tracks[0].title)
     assertEquals("Doorie", tracks[0].album)
     assertEquals("Atif Aslam", tracks[0].artist)
     assertTrue(tracks[0].lyricsUrdu.contains("کچھ اس طرح"))
+    assertEquals("dQm7vX18K5M", tracks[0].youtubeVideoId)
 
     assertEquals("Doorie", tracks[1].title)
     assertEquals("Aadat (Acoustic)", tracks[2].title)
@@ -83,6 +84,8 @@ class ExampleRobolectricTest {
     assertEquals("Kadi Te Has Bol Ve", tracks[4].title)
     assertEquals("Yakeen", tracks[5].title)
     assertEquals("Ehsaas", tracks[6].title)
+    assertEquals("Pehli Nazar Mein", tracks[7].title)
+    assertEquals("Tera Hone Laga Hoon", tracks[8].title)
   }
 
   @Test

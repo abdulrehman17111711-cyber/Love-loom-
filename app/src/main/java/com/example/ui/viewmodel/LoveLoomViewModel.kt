@@ -126,6 +126,7 @@ class LoveLoomViewModel(application: Application) : AndroidViewModel(application
       _userProfile.value = updated
       repository.saveUserProfile(updated)
       repository.seedDefaultsIfEmpty(trimmedName)
+      repository.updateRecipientNameInLetters(trimmedName)
 
       if (updated.musicEnabled) {
         audioEngine.resumeMusic()
@@ -160,6 +161,16 @@ class LoveLoomViewModel(application: Application) : AndroidViewModel(application
     }
   }
 
+  fun updateRecipientName(name: String) {
+    viewModelScope.launch {
+      val trimmed = name.trim().ifBlank { _userProfile.value.recipientName }
+      val updated = _userProfile.value.copy(recipientName = trimmed)
+      _userProfile.value = updated
+      repository.saveUserProfile(updated)
+      repository.updateRecipientNameInLetters(trimmed)
+    }
+  }
+
   fun updateProfileDetails(name: String, day: Int, month: Int, year: Int) {
     viewModelScope.launch {
       val trimmed = if (name.isBlank()) _userProfile.value.recipientName else name.trim()
@@ -171,6 +182,7 @@ class LoveLoomViewModel(application: Application) : AndroidViewModel(application
       )
       _userProfile.value = updated
       repository.saveUserProfile(updated)
+      repository.updateRecipientNameInLetters(trimmed)
     }
   }
 

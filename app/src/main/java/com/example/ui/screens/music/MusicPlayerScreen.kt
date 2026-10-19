@@ -1,5 +1,12 @@
 package com.example.ui.screens.music
 
+import android.content.Intent
+import android.net.Uri
+import android.view.View
+import android.view.ViewGroup
+import android.webkit.WebChromeClient
+import android.webkit.WebView
+import android.webkit.WebViewClient
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
@@ -7,8 +14,6 @@ import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -34,23 +39,32 @@ import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.GraphicEq
 import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material.icons.filled.MusicOff
+import androidx.compose.material.icons.filled.OpenInNew
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.SkipNext
 import androidx.compose.material.icons.filled.SkipPrevious
+import androidx.compose.material.icons.filled.Videocam
 import androidx.compose.material.icons.filled.VolumeDown
 import androidx.compose.material.icons.filled.VolumeUp
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -62,14 +76,21 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.viewinterop.AndroidView
 import com.example.audio.AudioTrackInfo
 import com.example.audio.LoveAudioEngine
 import com.example.ui.components.FloatingParticles
+
+enum class MusicDisplayMode {
+  YOUTUBE_PLAYER,
+  TURNTABLE_DECK
+}
 
 @Composable
 fun MusicPlayerScreen(
@@ -82,9 +103,12 @@ fun MusicPlayerScreen(
   onBack: () -> Unit,
   reducedMotion: Boolean = false
 ) {
+  val context = LocalContext.current
   val safeTrackIndex = currentTrackIndex.coerceIn(0, audioEngine.tracks.size - 1)
   val currentTrack = audioEngine.tracks[safeTrackIndex]
   val progressSec by audioEngine.trackProgressSeconds.collectAsState()
+
+  var displayMode by remember { mutableStateOf(MusicDisplayMode.YOUTUBE_PLAYER) }
 
   val infiniteTransition = rememberInfiniteTransition(label = "VinylSpin")
   val spinAngle by infiniteTransition.animateFloat(
@@ -97,7 +121,7 @@ fun MusicPlayerScreen(
     label = "spin"
   )
 
-  // 8-Band Dynamic Equalizer Visualizer
+  // 6-Band Dynamic Equalizer Visualizer
   val eq1 by infiniteTransition.animateFloat(
     initialValue = 0.25f, targetValue = 0.95f,
     animationSpec = infiniteRepeatable(tween(210, easing = LinearEasing), RepeatMode.Reverse), label = "eq1"
@@ -149,7 +173,7 @@ fun MusicPlayerScreen(
       modifier = Modifier
         .fillMaxSize()
         .verticalScroll(rememberScrollState())
-        .padding(horizontal = 20.dp, vertical = 16.dp),
+        .padding(horizontal = 18.dp, vertical = 14.dp),
       horizontalAlignment = Alignment.CenterHorizontally
     ) {
       // Top Navigation Bar
@@ -176,16 +200,16 @@ fun MusicPlayerScreen(
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
           Row(verticalAlignment = Alignment.CenterVertically) {
             Text(
-              text = "Atif Aslam Romance 🎵",
+              text = "Atif Aslam Original Hits 🎵",
               fontWeight = FontWeight.ExtraBold,
-              fontSize = 17.sp,
+              fontSize = 16.5.sp,
               color = Color(0xFF831843)
             )
             Spacer(modifier = Modifier.width(4.dp))
             Text(text = "🇵🇰", fontSize = 16.sp)
           }
           Text(
-            text = "Pakistani Romantic Classics Playlist",
+            text = "Official YouTube Audio & Video Tracks",
             fontSize = 11.5.sp,
             color = Color(0xFFBE185D),
             fontWeight = FontWeight.SemiBold
@@ -209,134 +233,387 @@ fun MusicPlayerScreen(
         }
       }
 
-      Spacer(modifier = Modifier.height(18.dp))
+      Spacer(modifier = Modifier.height(14.dp))
 
-      // Realistic 3D Turntable Player Deck
-      Card(
+      // Mode Switcher: YouTube Video Player vs 3D Turntable Deck
+      Row(
         modifier = Modifier
           .fillMaxWidth()
-          .shadow(16.dp, RoundedCornerShape(34.dp)),
-        shape = RoundedCornerShape(34.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        border = BorderStroke(1.5.dp, Color(0xFFFFD1DC))
+          .clip(RoundedCornerShape(16.dp))
+          .background(Color.White.copy(alpha = 0.9f))
+          .padding(4.dp),
+        horizontalArrangement = Arrangement.SpaceEvenly
       ) {
         Box(
           modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 24.dp),
+            .weight(1f)
+            .clip(RoundedCornerShape(12.dp))
+            .then(
+              if (displayMode == MusicDisplayMode.YOUTUBE_PLAYER) {
+                Modifier.background(Brush.horizontalGradient(listOf(Color(0xFFFF2E7E), Color(0xFFBE185D))))
+              } else {
+                Modifier.background(Color.Transparent)
+              }
+            )
+            .clickable { displayMode = MusicDisplayMode.YOUTUBE_PLAYER }
+            .padding(vertical = 8.dp)
+            .testTag("mode_youtube_tab"),
           contentAlignment = Alignment.Center
         ) {
-          // Turntable Metal Platter with soft rim
-          Box(
-            modifier = Modifier
-              .size(246.dp)
-              .clip(CircleShape)
-              .background(
-                Brush.radialGradient(
-                  colors = listOf(Color(0xFFE2E8F0), Color(0xFF94A3B8), Color(0xFF475569))
-                )
-              ),
-            contentAlignment = Alignment.Center
-          ) {
-            // Spinning Vinyl Disc with realistic grooved sheen
-            Box(
-              modifier = Modifier
-                .size(228.dp)
-                .rotate(spinAngle)
-                .clip(CircleShape)
-                .background(
-                  Brush.radialGradient(
-                    colors = listOf(
-                      Color(0xFF1E1B4B),
-                      Color(0xFF0F172A),
-                      Color(0xFF1E293B),
-                      Color(0xFF090D16)
-                    )
-                  )
-                ),
-              contentAlignment = Alignment.Center
-            ) {
-              // Canvas for micro-grooves and light reflections
-              Canvas(modifier = Modifier.fillMaxSize()) {
-                val r = size.width * 0.5f
-                val c = Offset(r, r)
-                for (radiusStep in listOf(0.38f, 0.48f, 0.58f, 0.68f, 0.78f, 0.88f)) {
-                  drawCircle(
-                    color = Color.White.copy(alpha = 0.09f),
-                    radius = r * radiusStep,
-                    center = c,
-                    style = Stroke(width = 1.4f)
-                  )
-                }
-              }
-
-              // Center Vinyl Label with Atif Aslam Tribute Emblem
-              Box(
-                modifier = Modifier
-                  .size(92.dp)
-                  .clip(CircleShape)
-                  .background(
-                    Brush.radialGradient(
-                      colors = listOf(Color(0xFFFF8DA1), Color(0xFFFF2E7E), Color(0xFF9D174D))
-                    )
-                  ),
-                contentAlignment = Alignment.Center
-              ) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                  Text(text = "🇵🇰", fontSize = 16.sp)
-                  Text(
-                    text = "ATIF ASLAM",
-                    fontSize = 9.sp,
-                    fontWeight = FontWeight.Black,
-                    color = Color.White,
-                    letterSpacing = 1.sp
-                  )
-                  Text(
-                    text = currentTrack.album,
-                    fontSize = 7.5.sp,
-                    color = Color(0xFFFFD1DC),
-                    fontWeight = FontWeight.Medium
-                  )
-                }
-              }
-            }
+          Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(
+              imageVector = Icons.Default.Videocam,
+              contentDescription = null,
+              tint = if (displayMode == MusicDisplayMode.YOUTUBE_PLAYER) Color.White else Color(0xFF831843),
+              modifier = Modifier.size(16.dp)
+            )
+            Spacer(modifier = Modifier.width(6.dp))
+            Text(
+              text = "YouTube Song 📺",
+              fontSize = 12.sp,
+              fontWeight = FontWeight.Bold,
+              color = if (displayMode == MusicDisplayMode.YOUTUBE_PLAYER) Color.White else Color(0xFF831843)
+            )
           }
+        }
 
-          // Turntable Tone Arm (Metallic Needle) pivoting gracefully onto vinyl
-          Canvas(
-            modifier = Modifier.size(246.dp)
-          ) {
-            val armPivot = Offset(size.width * 0.86f, size.height * 0.14f)
-            val needleTip = Offset(size.width * 0.58f, size.height * 0.48f)
+        Spacer(modifier = Modifier.width(6.dp))
 
-            // Tone arm base
-            drawCircle(color = Color(0xFFCBD5E1), radius = 15f, center = armPivot)
-            drawCircle(color = Color(0xFF475569), radius = 9f, center = armPivot)
-
-            // Metallic arm rod
-            drawLine(
-              color = Color(0xFF94A3B8),
-              start = armPivot,
-              end = needleTip,
-              strokeWidth = 5.5f
+        Box(
+          modifier = Modifier
+            .weight(1f)
+            .clip(RoundedCornerShape(12.dp))
+            .then(
+              if (displayMode == MusicDisplayMode.TURNTABLE_DECK) {
+                Modifier.background(Brush.horizontalGradient(listOf(Color(0xFFFF2E7E), Color(0xFFBE185D))))
+              } else {
+                Modifier.background(Color.Transparent)
+              }
             )
-
-            // Stylus head cartridge
-            drawRoundRect(
-              color = Color(0xFF1E293B),
-              topLeft = Offset(needleTip.x - 7f, needleTip.y - 9f),
-              size = Size(16f, 22f),
-              cornerRadius = CornerRadius(4f, 4f)
+            .clickable { displayMode = MusicDisplayMode.TURNTABLE_DECK }
+            .padding(vertical = 8.dp)
+            .testTag("mode_turntable_tab"),
+          contentAlignment = Alignment.Center
+        ) {
+          Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(
+              imageVector = Icons.Default.GraphicEq,
+              contentDescription = null,
+              tint = if (displayMode == MusicDisplayMode.TURNTABLE_DECK) Color.White else Color(0xFF831843),
+              modifier = Modifier.size(16.dp)
             )
-            // Golden stylus indicator light
-            drawCircle(color = Color(0xFFFFD700), radius = 3.5f, center = needleTip)
+            Spacer(modifier = Modifier.width(6.dp))
+            Text(
+              text = "Vinyl Turntable 💽",
+              fontSize = 12.sp,
+              fontWeight = FontWeight.Bold,
+              color = if (displayMode == MusicDisplayMode.TURNTABLE_DECK) Color.White else Color(0xFF831843)
+            )
           }
         }
       }
 
-      Spacer(modifier = Modifier.height(18.dp))
+      Spacer(modifier = Modifier.height(14.dp))
 
-      // Now Playing Title & Equalizer
+      // Main Media Showcase: YouTube Player or Turntable Deck
+      if (displayMode == MusicDisplayMode.YOUTUBE_PLAYER) {
+        // Embedded YouTube Video & Audio Player
+        Card(
+          modifier = Modifier
+            .fillMaxWidth()
+            .shadow(16.dp, RoundedCornerShape(26.dp)),
+          shape = RoundedCornerShape(26.dp),
+          colors = CardDefaults.cardColors(containerColor = Color(0xFF0F172A)),
+          border = BorderStroke(1.5.dp, Color(0xFFFFD1DC))
+        ) {
+          Column {
+            Box(
+              modifier = Modifier
+                .fillMaxWidth()
+                .height(210.dp)
+                .clip(RoundedCornerShape(topStart = 26.dp, topEnd = 26.dp))
+                .background(Color.Black)
+            ) {
+              val videoId = currentTrack.youtubeVideoId.ifBlank { "dQm7vX18K5M" }
+              AndroidView(
+                modifier = Modifier.fillMaxSize().testTag("youtube_webview_player"),
+                factory = { ctx ->
+                  WebView(ctx).apply {
+                    layoutParams = ViewGroup.LayoutParams(
+                      ViewGroup.LayoutParams.MATCH_PARENT,
+                      ViewGroup.LayoutParams.MATCH_PARENT
+                    )
+                    try {
+                      setLayerType(View.LAYER_TYPE_SOFTWARE, null)
+                    } catch (_: Throwable) {}
+                    settings.javaScriptEnabled = true
+                    settings.domStorageEnabled = true
+                    settings.mediaPlaybackRequiresUserGesture = false
+                    webViewClient = WebViewClient()
+                    webChromeClient = WebChromeClient()
+                  }
+                },
+                update = { webView ->
+                  val embedHtml = """
+                    <!DOCTYPE html>
+                    <html>
+                    <head>
+                      <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+                      <style>
+                        body { margin:0; padding:0; background-color:#000; overflow:hidden; }
+                        .video-box { position:relative; width:100%; height:100vh; }
+                        iframe { width:100%; height:100%; border:none; }
+                      </style>
+                    </head>
+                    <body>
+                      <div class="video-box">
+                        <iframe src="https://www.youtube-nocookie.com/embed/$videoId?autoplay=1&playsinline=1&rel=0&modestbranding=1" 
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                                allowfullscreen>
+                        </iframe>
+                      </div>
+                    </body>
+                    </html>
+                  """.trimIndent()
+                  webView.loadDataWithBaseURL("https://www.youtube.com", embedHtml, "text/html", "UTF-8", null)
+                },
+                onRelease = { webView ->
+                  try {
+                    webView.stopLoading()
+                    webView.destroy()
+                  } catch (_: Throwable) {}
+                }
+              )
+            }
+
+            // Video player footer details
+            Row(
+              modifier = Modifier
+                .fillMaxWidth()
+                .background(Color(0xFF1E293B))
+                .padding(horizontal = 16.dp, vertical = 12.dp),
+              horizontalArrangement = Arrangement.SpaceBetween,
+              verticalAlignment = Alignment.CenterVertically
+            ) {
+              Column(modifier = Modifier.weight(1f)) {
+                Text(
+                  text = "${currentTrack.title} — Atif Aslam",
+                  fontWeight = FontWeight.Bold,
+                  fontSize = 13.5.sp,
+                  color = Color.White
+                )
+                Text(
+                  text = "Album: ${currentTrack.album} (${currentTrack.releaseYear})",
+                  fontSize = 11.sp,
+                  color = Color(0xFF94A3B8)
+                )
+              }
+
+              Box(
+                modifier = Modifier
+                  .clip(RoundedCornerShape(8.dp))
+                  .background(Color(0xFFFF0000))
+                  .padding(horizontal = 8.dp, vertical = 4.dp)
+              ) {
+                Text(
+                  text = "YouTube HD",
+                  color = Color.White,
+                  fontSize = 10.sp,
+                  fontWeight = FontWeight.ExtraBold
+                )
+              }
+            }
+          }
+        }
+      } else {
+        // Realistic 3D Turntable Player Deck
+        Card(
+          modifier = Modifier
+            .fillMaxWidth()
+            .shadow(16.dp, RoundedCornerShape(34.dp)),
+          shape = RoundedCornerShape(34.dp),
+          colors = CardDefaults.cardColors(containerColor = Color.White),
+          border = BorderStroke(1.5.dp, Color(0xFFFFD1DC))
+        ) {
+          Box(
+            modifier = Modifier
+              .fillMaxWidth()
+              .padding(vertical = 24.dp),
+            contentAlignment = Alignment.Center
+          ) {
+            // Turntable Metal Platter
+            Box(
+              modifier = Modifier
+                .size(246.dp)
+                .clip(CircleShape)
+                .background(
+                  Brush.radialGradient(
+                    colors = listOf(Color(0xFFE2E8F0), Color(0xFF94A3B8), Color(0xFF475569))
+                  )
+                ),
+              contentAlignment = Alignment.Center
+            ) {
+              // Spinning Vinyl Disc
+              Box(
+                modifier = Modifier
+                  .size(228.dp)
+                  .rotate(spinAngle)
+                  .clip(CircleShape)
+                  .background(
+                    Brush.radialGradient(
+                      colors = listOf(
+                        Color(0xFF1E1B4B),
+                        Color(0xFF0F172A),
+                        Color(0xFF1E293B),
+                        Color(0xFF090D16)
+                      )
+                    )
+                  ),
+                contentAlignment = Alignment.Center
+              ) {
+                Canvas(modifier = Modifier.fillMaxSize()) {
+                  val r = size.width * 0.5f
+                  val c = Offset(r, r)
+                  for (radiusStep in listOf(0.38f, 0.48f, 0.58f, 0.68f, 0.78f, 0.88f)) {
+                    drawCircle(
+                      color = Color.White.copy(alpha = 0.09f),
+                      radius = r * radiusStep,
+                      center = c,
+                      style = Stroke(width = 1.4f)
+                    )
+                  }
+                }
+
+                // Center Vinyl Label
+                Box(
+                  modifier = Modifier
+                    .size(92.dp)
+                    .clip(CircleShape)
+                    .background(
+                      Brush.radialGradient(
+                        colors = listOf(Color(0xFFFF8DA1), Color(0xFFFF2E7E), Color(0xFF9D174D))
+                      )
+                    ),
+                  contentAlignment = Alignment.Center
+                ) {
+                  Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(text = "🇵🇰", fontSize = 16.sp)
+                    Text(
+                      text = "ATIF ASLAM",
+                      fontSize = 9.sp,
+                      fontWeight = FontWeight.Black,
+                      color = Color.White,
+                      letterSpacing = 1.sp
+                    )
+                    Text(
+                      text = currentTrack.album,
+                      fontSize = 7.5.sp,
+                      color = Color(0xFFFFD1DC),
+                      fontWeight = FontWeight.Medium
+                    )
+                  }
+                }
+              }
+            }
+
+            // Stylus Tonearm Needle
+            Box(
+              modifier = Modifier
+                .align(Alignment.TopEnd)
+                .padding(end = 22.dp, top = 8.dp)
+                .size(width = 24.dp, height = 110.dp)
+                .rotate(if (isPlaying) 26f else 8f)
+            ) {
+              Canvas(modifier = Modifier.fillMaxSize()) {
+                drawRoundRect(
+                  color = Color(0xFF64748B),
+                  topLeft = Offset(size.width * 0.35f, 0f),
+                  size = Size(6f, size.height * 0.85f),
+                  cornerRadius = CornerRadius(3f, 3f)
+                )
+                drawCircle(
+                  color = Color(0xFFE2E8F0),
+                  radius = 8f,
+                  center = Offset(size.width * 0.35f + 3f, 8f)
+                )
+                drawRoundRect(
+                  color = Color(0xFFFF2E7E),
+                  topLeft = Offset(size.width * 0.2f, size.height * 0.85f),
+                  size = Size(14f, 20f),
+                  cornerRadius = CornerRadius(4f, 4f)
+                )
+              }
+            }
+          }
+        }
+      }
+
+      Spacer(modifier = Modifier.height(12.dp))
+
+      // Direct YouTube Action Buttons (Launch in YouTube App or Search)
+      Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(10.dp)
+      ) {
+        Button(
+          onClick = {
+            val videoId = currentTrack.youtubeVideoId.ifBlank { "dQm7vX18K5M" }
+            val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://www.youtube.com/watch?v=$videoId"))
+            try {
+              context.startActivity(intent)
+            } catch (_: Throwable) {
+              val webIntent = Intent(Intent.ACTION_VIEW, Uri.parse("https://www.youtube.com/watch?v=$videoId"))
+              context.startActivity(webIntent)
+            }
+          },
+          modifier = Modifier.weight(1f).testTag("open_in_youtube_button"),
+          colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF0000)),
+          shape = RoundedCornerShape(14.dp)
+        ) {
+          Icon(
+            imageVector = Icons.Default.PlayArrow,
+            contentDescription = null,
+            tint = Color.White,
+            modifier = Modifier.size(18.dp)
+          )
+          Spacer(modifier = Modifier.width(6.dp))
+          Text(
+            text = "Watch on YouTube 📺",
+            fontSize = 11.5.sp,
+            fontWeight = FontWeight.Bold,
+            color = Color.White
+          )
+        }
+
+        OutlinedButton(
+          onClick = {
+            val query = Uri.encode("Atif Aslam " + currentTrack.title)
+            val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://www.youtube.com/results?search_query=$query"))
+            context.startActivity(intent)
+          },
+          modifier = Modifier.weight(1f).testTag("search_on_youtube_button"),
+          shape = RoundedCornerShape(14.dp),
+          border = BorderStroke(1.2.dp, Color(0xFFBE185D))
+        ) {
+          Icon(
+            imageVector = Icons.Default.Search,
+            contentDescription = null,
+            tint = Color(0xFFBE185D),
+            modifier = Modifier.size(16.dp)
+          )
+          Spacer(modifier = Modifier.width(6.dp))
+          Text(
+            text = "Search Track 🔍",
+            fontSize = 11.5.sp,
+            fontWeight = FontWeight.Bold,
+            color = Color(0xFFBE185D)
+          )
+        }
+      }
+
+      Spacer(modifier = Modifier.height(14.dp))
+
+      // Track Information Card
       Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -345,50 +622,47 @@ fun MusicPlayerScreen(
         Column(modifier = Modifier.weight(1f)) {
           Text(
             text = currentTrack.title,
-            fontWeight = FontWeight.ExtraBold,
-            fontSize = 21.sp,
+            fontWeight = FontWeight.Black,
+            fontSize = 20.sp,
             color = Color(0xFF831843)
           )
           Text(
-            text = "${currentTrack.artist} • Album: ${currentTrack.album} (${currentTrack.releaseYear})",
-            fontSize = 12.sp,
+            text = "${currentTrack.artist} • ${currentTrack.album} (${currentTrack.releaseYear})",
+            fontSize = 12.5.sp,
             color = Color(0xFFBE185D),
-            fontWeight = FontWeight.SemiBold
+            fontWeight = FontWeight.Medium
           )
           Text(
             text = currentTrack.mood,
             fontSize = 11.sp,
-            color = Color(0xFF6B7280),
-            fontWeight = FontWeight.Normal
+            color = Color(0xFF6B7280)
           )
         }
 
-        // Animated Equalizer Visualizer Bars
-        if (isPlaying && !reducedMotion) {
-          Row(
-            horizontalArrangement = Arrangement.spacedBy(3.5.dp),
-            verticalAlignment = Alignment.Bottom,
-            modifier = Modifier.height(30.dp)
-          ) {
-            val bars = listOf(eq1, eq2, eq3, eq4, eq5, eq6)
-            bars.forEach { h ->
-              Box(
-                modifier = Modifier
-                  .width(4.5.dp)
-                  .height((28 * h).dp)
-                  .clip(RoundedCornerShape(3.dp))
-                  .background(
-                    Brush.verticalGradient(
-                      colors = listOf(Color(0xFFFF2E7E), Color(0xFFFF5288))
-                    )
+        // Live Audio Equalizer Bars
+        Row(
+          horizontalArrangement = Arrangement.spacedBy(3.5.dp),
+          verticalAlignment = Alignment.Bottom,
+          modifier = Modifier.height(30.dp)
+        ) {
+          val bars = listOf(eq1, eq2, eq3, eq4, eq5, eq6)
+          bars.forEach { h ->
+            Box(
+              modifier = Modifier
+                .width(4.5.dp)
+                .height((28 * h).dp)
+                .clip(RoundedCornerShape(3.dp))
+                .background(
+                  Brush.verticalGradient(
+                    colors = listOf(Color(0xFFFF2E7E), Color(0xFFFF5288))
                   )
-              )
-            }
+                )
+            )
           }
         }
       }
 
-      Spacer(modifier = Modifier.height(14.dp))
+      Spacer(modifier = Modifier.height(12.dp))
 
       // Progress Scrubber Bar
       Column(modifier = Modifier.fillMaxWidth()) {
@@ -422,7 +696,7 @@ fun MusicPlayerScreen(
         }
       }
 
-      Spacer(modifier = Modifier.height(12.dp))
+      Spacer(modifier = Modifier.height(10.dp))
 
       // Media Controls
       Row(
@@ -447,7 +721,7 @@ fun MusicPlayerScreen(
           )
         }
 
-        Spacer(modifier = Modifier.width(26.dp))
+        Spacer(modifier = Modifier.width(24.dp))
 
         Box(
           modifier = Modifier
@@ -471,7 +745,7 @@ fun MusicPlayerScreen(
           )
         }
 
-        Spacer(modifier = Modifier.width(26.dp))
+        Spacer(modifier = Modifier.width(24.dp))
 
         IconButton(
           onClick = { audioEngine.nextTrack() },
@@ -491,7 +765,7 @@ fun MusicPlayerScreen(
         }
       }
 
-      Spacer(modifier = Modifier.height(16.dp))
+      Spacer(modifier = Modifier.height(14.dp))
 
       // Volume Slider
       Row(
@@ -615,7 +889,7 @@ fun MusicPlayerScreen(
                 color = Color(0xFF831843)
               )
               Text(
-                text = "Original Albums: Doorie, Jal Pari & Coke/Velo",
+                text = "Original Official Tracks & YouTube Videos",
                 fontSize = 10.5.sp,
                 color = Color(0xFF9CA3AF)
               )
@@ -655,7 +929,10 @@ fun MusicPlayerScreen(
                     Modifier.background(Color.Transparent)
                   }
                 )
-                .clickable { audioEngine.playTrack(index) }
+                .clickable {
+                  audioEngine.playTrack(index)
+                  displayMode = MusicDisplayMode.YOUTUBE_PLAYER
+                }
                 .padding(horizontal = 14.dp, vertical = 12.dp)
                 .testTag("atif_track_$index"),
               horizontalArrangement = Arrangement.SpaceBetween,
@@ -673,7 +950,7 @@ fun MusicPlayerScreen(
                   contentAlignment = Alignment.Center
                 ) {
                   Icon(
-                    imageVector = if (isCurrent && isPlaying) Icons.Default.GraphicEq else Icons.Default.MusicNote,
+                    imageVector = if (isCurrent) Icons.Default.Videocam else Icons.Default.MusicNote,
                     contentDescription = null,
                     tint = if (isCurrent) Color.White else Color(0xFFBE185D),
                     modifier = Modifier.size(20.dp)
@@ -697,7 +974,7 @@ fun MusicPlayerScreen(
                 }
               }
 
-              if (isCurrent && isPlaying) {
+              if (isCurrent) {
                 Box(
                   modifier = Modifier
                     .clip(RoundedCornerShape(10.dp))
@@ -705,19 +982,35 @@ fun MusicPlayerScreen(
                     .padding(horizontal = 8.dp, vertical = 3.dp)
                 ) {
                   Text(
-                    text = "Playing ✨",
+                    text = "Playing ▶",
                     fontSize = 10.sp,
                     color = Color.White,
                     fontWeight = FontWeight.Bold
                   )
                 }
               } else {
-                Text(
-                  text = formatTime(track.durationSeconds),
-                  fontSize = 11.sp,
-                  color = Color(0xFF9CA3AF),
-                  fontWeight = FontWeight.Medium
-                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                  Box(
+                    modifier = Modifier
+                      .clip(RoundedCornerShape(6.dp))
+                      .background(Color(0xFFF1F5F9))
+                      .padding(horizontal = 6.dp, vertical = 2.dp)
+                  ) {
+                    Text(
+                      text = "▶ YouTube",
+                      fontSize = 9.sp,
+                      color = Color(0xFF64748B),
+                      fontWeight = FontWeight.Medium
+                    )
+                  }
+                  Spacer(modifier = Modifier.width(6.dp))
+                  Text(
+                    text = formatTime(track.durationSeconds),
+                    fontSize = 11.sp,
+                    color = Color(0xFF9CA3AF),
+                    fontWeight = FontWeight.Medium
+                  )
+                }
               }
             }
             if (index < audioEngine.tracks.size - 1) {

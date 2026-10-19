@@ -43,6 +43,9 @@ interface LoveLoomDao {
   @Query("SELECT * FROM love_letters ORDER BY isFavorite DESC, id ASC")
   fun getAllLettersFlow(): Flow<List<LoveLetter>>
 
+  @Query("SELECT * FROM love_letters")
+  suspend fun getAllLetters(): List<LoveLetter>
+
   @Insert(onConflict = OnConflictStrategy.REPLACE)
   suspend fun insertLetter(letter: LoveLetter): Long
 
